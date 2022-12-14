@@ -2,6 +2,7 @@ using InstaAPI.Application.Helpers;
 using InstaAPI.Application.Mapper;
 using InstaAPI.Application.Models.Payload;
 using InstaAPI.Application.Repository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InstaAPI.Controllers;
@@ -31,8 +32,11 @@ public class InstaAppController : ControllerBase{
     [HttpPost("create-user")]
     public async Task<IActionResult> SignUp(string userName){
         var result = await _repository.CreateUser(userName);
+        if (result?.Exception?.Status != "" && result?.Exception?.Status == "failure")
+            return new JsonResult(result.Exception) { StatusCode = StatusCodes.Status400BadRequest };
 
-        return _builder.BuildClientResult(result, result?.Exception?.Status);
+        return new JsonResult(result) { StatusCode = StatusCodes.Status201Created };
+        //return _builder.BuildClientResult(result, result?.Exception?.Status);
 
     }
 
@@ -45,9 +49,8 @@ public class InstaAppController : ControllerBase{
     [HttpGet("get-user/{userName}")]
     public async Task<IActionResult> GetUser(string userName)
     {
-        var result = await _repository.FetchUser(userName);
-
-        return _builder.BuildClientResult(result, result?.Exception?.Status);
+            var result = await _repository.FetchUser(userName);
+            return _builder.BuildClientResult(result, result?.Exception?.Status); 
     }
 
 
@@ -62,7 +65,12 @@ public class InstaAppController : ControllerBase{
     {
         var result = await _repository.FollowUser(follower, followee);
 
-        return _builder.BuildClientResult(result, result?.Exception?.Status);
+        if (result?.Exception?.Status != "" && result?.Exception?.Status == "failure")
+            return new JsonResult(result.Exception) { StatusCode = StatusCodes.Status400BadRequest };
+
+        return new JsonResult(result) { StatusCode = StatusCodes.Status202Accepted };
+
+        //return _builder.BuildClientResult(result, result?.Exception?.Status);
     }
 
 

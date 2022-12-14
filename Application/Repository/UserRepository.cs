@@ -83,6 +83,18 @@ public class UserRepository : IUserRepository
         var followerData = context.InstaUser.FirstOrDefault(x => x.username.ToLower() == follower.ToLower());
         var followeeData = context.InstaUser.FirstOrDefault(x => x.username.ToLower() == followee.ToLower());
 
+        if ((bool)followerData?.following?.Contains(followee))
+        {
+            return new BaseResponse
+            {
+                Exception = new InstaException
+                {
+                    Status = "failure",
+                    Reason = $"You are already following {followee}"
+                }
+            };
+        }
+
         followerData.following = followerData.following.Length > 0 ?  followerData.following + $",{followee}" : followerData.following + $"{followee}";
         followeeData.followers = followerData.followers.Length > 0 ? followerData.followers + $",{follower}" : followerData.followers + $"{follower}";
 
@@ -155,6 +167,8 @@ public class UserRepository : IUserRepository
     {
         if (userInfo == null)
         {
+            throw new Exception("user not exists");
+
             return new BaseResponse
             {
                 Exception = new InstaException
